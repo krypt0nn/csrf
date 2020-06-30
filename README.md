@@ -27,7 +27,7 @@ require 'csrf.php';
 
 ## Пример работы
 
-```html
+```php
 <?php
 
 require 'qero-packages/autoload.php';
