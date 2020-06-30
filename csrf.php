@@ -28,7 +28,7 @@ function csrf ($lifetime = null)
 
     # Если в функцию передана строка - проверяем её в качестве токена
     if (is_string ($lifetime))
-        return $lifetime == csrf(1);
+        return $lifetime == csrf(0);
 
     # Если передано число или null - создаём новый токен
     elseif (is_int ($lifetime) || $lifetime === null)
