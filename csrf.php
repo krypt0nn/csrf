@@ -22,13 +22,27 @@
 # Ключ шифрование cookie с CSRF токеном
 const CSRF_ENCRYPTION_KEY = '(*#@($OPFEJDFLK#J$OEFL:#@$(Q@){$V*(%)(@*$V ^&)(QW$@)$MVYN(@*( WEHF GUEKIFiueI(*UC)$U(*Y$($OQ$X@*&Q@Y$C@Q*(VT*HAEIUG^&@UQD';
 
+# Удалять ли CSRF токен после успешной верификации
+# Необходимо для предотвращения повторной эксплуатации токенов
+const CSRF_REMOVE_AFTER_VERIFYING = true;
+
 function csrf ($lifetime = null)
 {
     session_start ();
 
     # Если в функцию передана строка - проверяем её в качестве токена
     if (is_string ($lifetime))
-        return $lifetime == csrf(0);
+    {
+        # Проверяем токен и если он корректен - удаляем его
+        # чтобы в следующий раз создался новый
+        if (($status = $lifetime == csrf(0)) && CSRF_REMOVE_AFTER_VERIFYING)
+        {
+            unset ($_SESSION['csrf']);
+            setcookie ('csrf', '', time () - 3600);
+        }
+
+        return $status;
+    }
 
     # Если передано число или null - создаём новый токен
     elseif (is_int ($lifetime) || $lifetime === null)
@@ -75,8 +89,7 @@ function csrf ($lifetime = null)
                 # Сам токен, генерируемый случайным образом
                 'token' => hash ('sha256', uniqid (
                     extension_loaded ('openssl') ?
-                        openssl_random_pseudo_bytes (32) : rand (PHP_INT_MIN, PHP_INT_MAX),
-                    true)),
+                        openssl_random_pseudo_bytes (32) : rand (PHP_INT_MIN, PHP_INT_MAX), true)),
                 
                 # timestamp, до которой будет жить токен
                 # если $lifetime == null - токен будет активным до конца сессии и рестарта браузера
