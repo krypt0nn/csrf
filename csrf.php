@@ -36,6 +36,8 @@ function csrf ($lifetime = null)
                 $_SERVER['HTTP_X_FORWARDED_FOR'] :
                 $_SERVER['REMOTE_ADDR']);
 
+    $userAgent = $_SERVER['HTTP_USER_AGENT'];
+
     # Если в функцию передана строка - проверяем её в качестве токена
     if (is_string ($lifetime))
     {
@@ -60,7 +62,7 @@ function csrf ($lifetime = null)
             $csrf = $_SESSION['csrf'];
 
             # Проверяем его на активность и если что - удаляем
-            if (($csrf['timestamp'] !== null && $csrf['timestamp'] < time ()) || $csrf['ip'] != $ip)
+            if (($csrf['timestamp'] !== null && $csrf['timestamp'] < time ()) || $csrf['ip'] != $ip || $csrf['user_agent'] != $userAgent)
             {
                 unset ($_SESSION['csrf']);
 
@@ -76,7 +78,7 @@ function csrf ($lifetime = null)
             $csrf = @unserialize ($csrf);
 
             # Если токен неправильно расшифровался или был неактивен - удаляем его
-            if (!is_array ($csrf) || ($csrf['timestamp'] !== null && $csrf['timestamp'] < time ()) || $csrf['ip'] != $ip)
+            if (!is_array ($csrf) || ($csrf['timestamp'] !== null && $csrf['timestamp'] < time ()) || $csrf['ip'] != $ip || $csrf['user_agent'] != $userAgent)
             {
                 setcookie ('csrf', '', time () - 3600);
 
@@ -103,7 +105,10 @@ function csrf ($lifetime = null)
                     time () + (int) $lifetime : null,
 
                 # IP клиента, которому выдан CSRF токен
-                'ip' => $ip
+                'ip' => $ip,
+
+                # user agent клиента
+                'user_agent' => $userAgent
             );
 
             # Шифруем информацию о токене и сохраняем их в сессию и cookie
