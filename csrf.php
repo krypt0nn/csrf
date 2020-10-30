@@ -28,7 +28,8 @@ const CSRF_REMOVE_AFTER_VERIFYING = true;
 
 function csrf ($lifetime = null)
 {
-    session_start ();
+    if (session_status () !== PHP_SESSION_ACTIVE)
+        session_start ();
 
     $ip = !empty ($_SERVER['HTTP_CLIENT_IP']) ?
         $_SERVER['HTTP_CLIENT_IP'] : (
